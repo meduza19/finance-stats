@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет финансов - Статистика</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .period-selector {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .period-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .period-btn {
+            padding: 12px 24px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .period-btn:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .period-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .balance-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .balance-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .balance-card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .balance-card .amount {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .balance-card.income .amount {
+            color: #10b981;
+        }
+
+        .balance-card.expense .amount {
+            color: #ef4444;
+        }
+
+        .balance-card.savings .amount {
+            color: #f59e0b;
+        }
+
+        .balance-card.total .amount {
+            color: #667eea;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .category-item:last-child {
+            border-bottom: none;
+        }
+
+        .category-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            min-width: 150px;
+        }
+
+        .category-bar {
+            flex: 1;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+
+        .category-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .category-amount {
+            font-weight: bold;
+            color: #333;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        .transactions-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .transactions-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .transaction-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .transaction-icon.income {
+            background: #d1fae5;
+        }
+
+        .transaction-icon.expense {
+            background: #fee2e2;
+        }
+
+        .transaction-icon.savings {
+            background: #fef3c7;
+        }
+
+        .transaction-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .transaction-category {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .transaction-amount.income {
+            color: #10b981;
+        }
+
+        .transaction-amount.expense {
+            color: #ef4444;
+        }
+
+        .transaction-amount.savings {
+            color: #f59e0b;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .input-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .input-section textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .input-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-section button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s ease;
+        }
+
+        .input-section button:hover {
+            transform: scale(1.05);
+        }
+
+        .input-section button:active {
+            transform: scale(0.95);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .category-name {
+                min-width: 100px;
+            }
+
+            .period-buttons {
+                flex-direction: column;
+            }
+
+            .period-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Учет финансов</h1>
+            <p>Анализ доходов и расходов</p>
+        </div>
+
+        <div class="input-section" id="inputSection">
+            <h3>Вставьте данные из заметки</h3>
+            <textarea id="dataInput" placeholder="Вставьте сюда содержимое заметки 'Доходы - расходы'..."></textarea>
+            <button onclick="processData()">📊 Показать статистику</button>
+        </div>
+
+        <div id="statsContainer" style="display: none;">
+            <div class="period-selector">
+                <h3 style="margin-bottom: 15px;">📅 Период</h3>
+                <div class="period-buttons" id="periodButtons"></div>
+            </div>
+
+            <div class="balance-section">
+                <div class="balance-card income">
+                    <h3>Доходы</h3>
+                    <div class="amount" id="totalIncome">0 ¤</div>
+                </div>
+                <div class="balance-card expense">
+                    <h3>Расходы</h3>
+                    <div class="amount" id="totalExpense">0 ¤</div>
+                </div>
+                <div class="balance-card savings">
+                    <h3>Накопления</h3>
+                    <div class="amount" id="totalSavings">0 ¤</div>
+                </div>
+                <div class="balance-card total">
+                    <h3>Баланс</h3>
+                    <div class="amount" id="totalBalance">0 ¤</div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-card">
+                    <h3>📊 Расходы по категориям</h3>
+                    <div id="expenseCategories"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>📈 Доходы по категориям</h3>
+                    <div id="incomeCategories"></div>
+                </div>
+            </div>
+
+            <div class="transactions-section">
+                <h3>📝 История операций</h3>
+                <div id="transactionsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allTransactions = [];
+        let currentPeriod = 'all';
+
+        // Проверяем URL параметры при загрузке
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const data = urlParams.get('data');
+
+            if (data) {
+                try {
+                    const decodedData = decodeURIComponent(data);
+                    document.getElementById('dataInput').value = decodedData;
+                    processData();
+                } catch (e) {
+                    console.error('Ошибка декодирования данных:', e);
+                }
+            }
+        };
+
+        function processData() {
+            const input = document.getElementById('dataInput').value;
+            if (!input.trim()) {
+                alert('Вставьте данные из заметки');
+                return;
+            }
+
+            parseTransactions(input);
+
+            if (allTransactions.length === 0) {
+                alert('Данные не найдены. Проверьте формат заметки.');
+                return;
+            }
+
+            document.getElementById('inputSection').style.display = 'none';
+            document.getElementById('statsContainer').style.display = 'block';
+
+            generatePeriodButtons();
+            updateUI();
+        }
+
+        function parseTransactions(content) {
+            allTransactions = [];
+            const lines = content.split('\n');
+            let currentTransaction = null;
+
+            for (let line of lines) {
+                line = line.trim();
+
+                if (line.startsWith('🟢 ДОХОД') || line.includes('ДОХОД')) {
+                    if (currentTransaction) allTransactions.push(currentTransaction);
+                    currentTransaction = { type: 'income', icon: '🟢' };
+                } else if (line.startsWith('🔴 РАСХОД') || line.includes('РАСХОД')) {
+                    if (currentTransaction) allTransactions.push(currentTransaction);
+                    currentTransaction = { type: 'expense', icon: '🔴' };
+                } else if (line.startsWith('💰 НАКОПЛЕНИЯ') || line.includes('НАКОПЛЕНИЯ')) {
+                    if (currentTransaction) allTransactions.push(currentTransaction);
+                    currentTransaction = { type: 'savings', icon: '💰' };
+                } else if (currentTransaction) {
+                    if (line.startsWith('📅') || line.match(/\d{2}\.\d{2}\.\d{4}/)) {
+                        const dateMatch = line.match(/(\d{2}\.\d{2}\.\d{4})/);
+                        if (dateMatch) {
+                            currentTransaction.date = dateMatch[1];
+                        }
+                    } else if (line.startsWith('💬')) {
+                        currentTransaction.details = line.replace('💬', '').trim();
+                    } else if (line.startsWith('🏷️')) {
+                        currentTransaction.category = line.replace('🏷️', '').trim();
+                    } else if (line.match(/💵|💸|¤/)) {
+                        const match = line.match(/([\d,]+)\s*¤/);
+                        if (match) {
+                            currentTransaction.amount = parseFloat(match[1].replace(/,/g, ''));
+                        }
+                    }
+                }
+            }
+
+            if (currentTransaction) allTransactions.push(currentTransaction);
+        }
+
+        function generatePeriodButtons() {
+            const periods = new Set();
+            periods.add('all');
+
+            allTransactions.forEach(t => {
+                if (t.date) {
+                    const parts = t.date.split('.');
+                    if (parts.length === 3) {
+                        const month = parts[1];
+                        const year = parts[2];
+                        periods.add(`${month}.${year}`);
+                    }
+                }
+            });
+
+            const sortedPeriods = Array.from(periods).sort((a, b) => {
+                if (a === 'all') return -1;
+                if (b === 'all') return 1;
+
+                const [monthA, yearA] = a.split('.');
+                const [monthB, yearB] = b.split('.');
+
+                if (yearA !== yearB) return yearB - yearA;
+                return monthB - monthA;
+            });
+
+            const container = document.getElementById('periodButtons');
+            container.innerHTML = '';
+
+            sortedPeriods.forEach(period => {
+                const btn = document.createElement('button');
+                btn.className = 'period-btn' + (period === currentPeriod ? ' active' : '');
+                btn.textContent = period === 'all' ? 'Все периоды' : getMonthName(period);
+                btn.onclick = () => {
+                    currentPeriod = period;
+                    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateUI();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function getMonthName(period) {
+            const [month, year] = period.split('.');
+            const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                          'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            return `${months[parseInt(month) - 1]} ${year}`;
+        }
+
+        function filterTransactionsByPeriod(transactions) {
+            if (currentPeriod === 'all') return transactions;
+
+            return transactions.filter(t => {
+                if (!t.date) return false;
+                const parts = t.date.split('.');
+                if (parts.length !== 3) return false;
+                const transactionPeriod = `${parts[1]}.${parts[2]}`;
+                return transactionPeriod === currentPeriod;
+            });
+        }
+
+        function updateUI() {
+            const filteredTransactions = filterTransactionsByPeriod(allTransactions);
+
+            let totalIncome = 0;
+            let totalExpense = 0;
+            let totalSavings = 0;
+
+            const incomeByCategory = {};
+            const expenseByCategory = {};
+
+            filteredTransactions.forEach(t => {
+                if (t.type === 'income') {
+                    totalIncome += t.amount || 0;
+                    const cat = t.category || 'Другое';
+                    incomeByCategory[cat] = (incomeByCategory[cat] || 0) + (t.amount || 0);
+                } else if (t.type === 'expense') {
+                    totalExpense += t.amount || 0;
+                    const cat = t.category || 'Другое';
+                    expenseByCategory[cat] = (expenseByCategory[cat] || 0) + (t.amount || 0);
+                } else if (t.type === 'savings') {
+                    totalSavings += t.amount || 0;
+                }
+            });
+
+            const balance = totalIncome - totalExpense;
+
+            document.getElementById('totalIncome').textContent = formatAmount(totalIncome);
+            document.getElementById('totalExpense').textContent = formatAmount(totalExpense);
+            document.getElementById('totalSavings').textContent = formatAmount(totalSavings);
+            document.getElementById('totalBalance').textContent = formatAmount(balance);
+
+            renderCategories('expenseCategories', expenseByCategory, totalExpense);
+            renderCategories('incomeCategories', incomeByCategory, totalIncome);
+            renderTransactions(filteredTransactions);
+        }
+
+        function formatAmount(amount) {
+            return new Intl.NumberFormat('ru-RU').format(Math.round(amount)) + ' ¤';
+        }
+
+        function renderCategories(elementId, categories, total) {
+            const container = document.getElementById(elementId);
+
+            if (Object.keys(categories).length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>Нет данных за выбранный период</p></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            const sorted = Object.entries(categories).sort((a, b) => b[1] - a[1]);
+
+            sorted.forEach(([category, amount]) => {
+                const percentage = total > 0 ? ((amount / total) * 100).toFixed(1) : 0;
+                const item = document.createElement('div');
+                item.className = 'category-item';
+                item.innerHTML = `
+                    <div class="category-name">${category}</div>
+                    <div class="category-bar">
+                        <div class="category-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <div class="category-amount">${formatAmount(amount)} (${percentage}%)</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function renderTransactions(transactions) {
+            const container = document.getElementById('transactionsList');
+
+            if (transactions.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>Нет операций за выбранный период</p></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            const sorted = [...transactions].reverse();
+
+            sorted.forEach(t => {
+                const item = document.createElement('div');
+                item.className = 'transaction-item';
+                item.innerHTML = `
+                    <div class="transaction-info">
+                        <div class="transaction-icon ${t.type}">
+                            ${t.icon}
+                        </div>
+                        <div class="transaction-details">
+                            <div class="transaction-category">${t.category || 'Без категории'}</div>
+                            <div class="transaction-date">${t.date || ''} ${t.details ? '• ' + t.details : ''}</div>
+                        </div>
+                    </div>
+                    <div class="transaction-amount ${t.type}">
+                        ${t.type === 'expense' ? '-' : '+'}${formatAmount(t.amount || 0)}
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
